@@ -27,8 +27,10 @@
 # broken. This is a work in progress.
 
 import base64
+import ConfigParser
 import hashlib
 import logging
+import os
 import string
 import sys
 import ssl
@@ -134,6 +136,11 @@ class ZabbixAPI(object):
 
     def __init__(self, server='http://localhost/zabbix', user=httpuser, passwd=httppasswd,
                  log_level=logging.WARNING, timeout=10, r_query_len=10, validate_certs=True, **kwargs):
+        config=self.read_config()
+        if config.get('zabbixapi','proto'):
+            self.proto=config.get('zabbixapi','proto')
+        if config.get('zabbixapi','server'):
+            server=self.proto+"://"+config.get('zabbixapi','server')+"/zabbix"
         """ Create an API object.  """
         self._setuplogging()
         self.set_log_level(log_level)
@@ -184,8 +191,14 @@ class ZabbixAPI(object):
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
 
         return json.dumps(obj)
-
+    def read_config(self):
+        config_files=['/etc/zabbix/zabbix_api.conf',
+                 os.path.expanduser('~/.zabbix_api.conf')]
+        config=ConfigParser.ConfigParser()
+        config.read(config_files)
+        return config
     def login(self, user='', password='', save=True):
+        config=self.read_config()
         if user != '':
             l_user = user
             l_password = password
@@ -196,6 +209,9 @@ class ZabbixAPI(object):
         elif self.__username__ != '':
             l_user = self.__username__
             l_password = self.__password__
+        elif config:
+            l_user = config.get('zabbixapi','user')
+            l_password = config.get('zabbixapi','password')
         else:
             raise ZabbixAPIException("No authentication information available.")
 
