@@ -191,12 +191,14 @@ class ZabbixAPI(object):
         self.debug(logging.DEBUG, "json_obj: " + str(obj))
 
         return json.dumps(obj)
+    
     def read_config(self):
         config_files=['/etc/zabbix/zabbix_api.conf',
                  os.path.expanduser('~/.zabbix_api.conf')]
         config=ConfigParser.ConfigParser()
         config.read(config_files)
         return config
+    
     def login(self, user='', password='', save=True):
         config=self.read_config()
         if user != '':
